@@ -33,7 +33,7 @@ class Keymaster:
 
         data.append(sum)
 
-        print(data)
+        #print(data)
         self.ser.write(serial.to_bytes(data))
 
     def __read(self, read_bytes):
@@ -49,8 +49,6 @@ class Keymaster:
     def getLockerStatus(self, number):
         self.__write([0x02, number, 0x30, 0x03])
         return self.__read(9)
-
-
 
     def __error(self, message):
         print("[error] " + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S ') + ": " + message)
