@@ -13,7 +13,6 @@ def server_handler():
 
 def status_handler():
     current_state = {}
-    previous_state = {}
 
     for i in range(0, 15):
         current_state[i] = 0
@@ -23,6 +22,11 @@ def status_handler():
         print("Keymaster get status...")
         for i in range(0, 15):
             state = ser.getLockerStatus(i)
+            if current_state[i] != state:
+                print("Different state")
+                #Send Data to IP
+
+            current_state[i] = state
 
 
 if __name__ == "__main__":
