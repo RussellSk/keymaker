@@ -26,19 +26,14 @@ def status_handler():
     while True:
         try:
             time.sleep(.1)
-            print("Keymaster get status...")
+            state_bytes = ser.getLockerStatus(0x03)
+            changed = False
             for i in range(0, 16):
-                state = ser.getLockerStatus(i)
-                print("State of: {0} is {1}".format(i, state))
-                state = state[4]
+                state = not ((state_bytes[4] << 8) + state_bytes[3]) & (1 << i) == 0
+                print("{0}".format(state), end=' ')
 
-                if current_state[i] != state:
-                    print("Different state")
-                    #Send Data to IP
+            print("")
 
-                time.sleep(.1)
-
-                current_state[i] = state
         except Exception as err:
             print("Status Handler Error {0}".format(err))
 

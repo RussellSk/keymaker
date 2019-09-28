@@ -41,8 +41,8 @@ class KeymasterLan:
         self.__write([0x02, number, 0x31, 0x03])
 
     def getLockerStatus(self, number):
-        #print([0x02, number, 0x30, 0x03])
         self.__write([0x02, number, 0x30, 0x03])
+        time.sleep(.01)
         return self.__read(9)
 
 
