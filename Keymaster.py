@@ -1,5 +1,6 @@
 import serial
 import datetime
+import time
 
 
 class Keymaster:
@@ -48,6 +49,7 @@ class Keymaster:
 
     def getLockerStatus(self, number):
         self.__write([0x02, number, 0x30, 0x03])
+        time.sleep(.1)
         return self.__read(9)
 
     def __error(self, message):

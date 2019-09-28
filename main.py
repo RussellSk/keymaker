@@ -21,18 +21,23 @@ def status_handler():
     current_state = {}
 
     for i in range(0, 16):
-        current_state[i] = 0
+        current_state[i] = False
 
     while True:
         try:
-            time.sleep(.1)
+            time.sleep(.07)
             state_bytes = ser.getLockerStatus(0x03)
             changed = False
             for i in range(0, 16):
                 state = not ((state_bytes[4] << 8) + state_bytes[3]) & (1 << i) == 0
+                if current_state[i] is not state:
+                    changed = True
+                current_state[i] = state
                 print("{0}".format(state), end=' ')
 
             print("")
+            if changed:
+                print("STATE CHANGED SENDING...")
 
         except Exception as err:
             print("Status Handler Error {0}".format(err))

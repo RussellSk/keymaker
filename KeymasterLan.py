@@ -42,7 +42,7 @@ class KeymasterLan:
 
     def getLockerStatus(self, number):
         self.__write([0x02, number, 0x30, 0x03])
-        time.sleep(.01)
+        time.sleep(.05)
         return self.__read(9)
 
 
