@@ -8,6 +8,7 @@ from requests.adapters import HTTPAdapter
 
 KEYMASTER_DRIVER = "LAN" #Can be LAN or SERIAL
 API_URL = 'http://localhost/'
+POSTOMAT_NUMBER = 1
 
 if KEYMASTER_DRIVER == "LAN":
     ser = KeymasterLan.KeymasterLan('192.168.0.178', 5000)
@@ -16,7 +17,7 @@ elif KEYMASTER_DRIVER == "SERIAL":
 
 
 def server_handler():
-    server = Server('localhost', 80, ser)
+    server = Server('localhost', 8080, ser)
     server.start()
 
 
@@ -24,13 +25,13 @@ def send_status(data):
     try:
         send_data = ''
         for i in data:
-            send_data += str(i) + ":" + str(int(data.get(i))) + "::"
+            send_data += str(int(data.get(i))) + ":"
         print(send_data)
 
         service_api_adapter = HTTPAdapter(max_retries=3)
         session = requests.Session()
         session.mount(API_URL, service_api_adapter)
-        response = session.put(API_URL, data={'locker_statuses': send_data}, timeout=1.5)
+        response = session.put(API_URL, data={'locker_statuses': send_data, 'postomat_number': POSTOMAT_NUMBER}, timeout=1.5)
         if response.status_code == 200:
             print('Status sent successfully')
     except requests.exceptions.Timeout as err:
