@@ -7,7 +7,7 @@ import requests
 from requests.adapters import HTTPAdapter
 
 KEYMASTER_DRIVER = "LAN" #Can be LAN or SERIAL
-API_URL = 'http://localhost/'
+API_URL = 'http://postomat/api/postomat/status'
 POSTOMAT_NUMBER = 1
 
 if KEYMASTER_DRIVER == "LAN":
@@ -31,9 +31,11 @@ def send_status(data):
         service_api_adapter = HTTPAdapter(max_retries=3)
         session = requests.Session()
         session.mount(API_URL, service_api_adapter)
-        response = session.put(API_URL, data={'locker_statuses': send_data, 'postomat_number': POSTOMAT_NUMBER}, timeout=1.5)
+        response = session.post(API_URL, data={'locker_statuses': send_data, 'postomat_number': POSTOMAT_NUMBER}, timeout=1.5)
         if response.status_code == 200:
             print('Status sent successfully')
+        print(response.content)
+        print(response.status_code)
     except requests.exceptions.Timeout as err:
         print("API error: request TIMEOUT".format(err))
     except Exception as err:
