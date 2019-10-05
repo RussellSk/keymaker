@@ -6,9 +6,10 @@ import threading
 import requests
 from requests.adapters import HTTPAdapter
 
-KEYMASTER_DRIVER = "LAN" #Can be LAN or SERIAL
-API_URL = 'http://postomat/api/postomat/status'
-POSTOMAT_NUMBER = 1
+KEYMASTER_DRIVER = "SERIAL" #Can be LAN or SERIAL
+API_URL = 'http://192.168.16.200/api/postomat/status'
+POSTOMAT_NUMBER = 7
+
 
 if KEYMASTER_DRIVER == "LAN":
     ser = KeymasterLan.KeymasterLan('192.168.0.178', 5000)
@@ -62,6 +63,8 @@ def status_handler():
 
             print("")
             if changed:
+                #sending_thread = threading.Thread(target=send_status(), kwargs={"data": current_state})
+                #sending_thread.start()
                 send_status(current_state)
                 print("STATE CHANGED SENDING...")
 

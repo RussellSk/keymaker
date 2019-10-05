@@ -8,7 +8,7 @@ class Keymaster:
 
     ser = None
 
-    def __init__(self, _port="COM5", _baudrate=19200, _timeout=1, _stopbits=1):
+    def __init__(self, _port="COM3", _baudrate=19200, _timeout=1, _stopbits=1):
         try:
             self.ser = serial.Serial(port=_port, baudrate=_baudrate, timeout=_timeout, stopbits=_stopbits)
         except serial.SerialException as err:
