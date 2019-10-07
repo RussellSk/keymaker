@@ -5,20 +5,35 @@ from Server import Server
 import threading
 import requests
 from requests.adapters import HTTPAdapter
+import configparser
+import sys
 
-KEYMASTER_DRIVER = "SERIAL" #Can be LAN or SERIAL
-API_URL = 'http://192.168.16.200/api/postomat/status'
-POSTOMAT_NUMBER = 7
+cfg = configparser.ConfigParser()
+
+try:
+    cfg.read('keymaker.conf')
+except Exception as err:
+    print('Config load error: {0}'.format(err))
+    sys.exit(0)
+
+KEYMASTER_DRIVER = cfg.get('MAIN', 'driver_type')  # Can be LAN or SERIAL
+API_URL = cfg.get('MAIN', 'api_url')
+POSTOMAT_NUMBER = cfg.get('MAIN', 'postomat_number')
 
 
 if KEYMASTER_DRIVER == "LAN":
-    ser = KeymasterLan.KeymasterLan('192.168.16.30', 5000)
+    ser = KeymasterLan.KeymasterLan(cfg.get('DEVICE_LAN', 'ip'), cfg.get('DEVICE_LAN', 'port'))
 elif KEYMASTER_DRIVER == "SERIAL":
-    ser = Keymaster.Keymaster()
+    ser = Keymaster.Keymaster(
+        cfg.get('DEVICE_SERIAL', 'port'),
+        cfg.getint('DEVICE_SERIAL', 'baudrate'),
+        cfg.getint('DEVICE_SERIAL', 'timeout'),
+        cfg.getint('DEVICE_SERIAL', 'stopbits'))
 
 
 def server_handler():
-    server = Server('localhost', 8080, ser)
+    global cfg
+    server = Server(cfg.get('SERVICE', 'hostname'), cfg.getint('SERVICE', 'port'), ser)
     server.start()
 
 
