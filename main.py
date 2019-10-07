@@ -12,7 +12,7 @@ POSTOMAT_NUMBER = 7
 
 
 if KEYMASTER_DRIVER == "LAN":
-    ser = KeymasterLan.KeymasterLan('192.168.0.178', 5000)
+    ser = KeymasterLan.KeymasterLan('192.168.16.30', 5000)
 elif KEYMASTER_DRIVER == "SERIAL":
     ser = Keymaster.Keymaster()
 
@@ -51,23 +51,19 @@ def status_handler():
 
     while True:
         try:
-            time.sleep(.07)
-            state_bytes = ser.getLockerStatus(0x03)
+            ser.request_locker_status(0x03)
+            time.sleep(1)
+            new_state = ser.get_current_state()
             changed = False
             for i in range(0, 16):
-                state = not ((state_bytes[4] << 8) + state_bytes[3]) & (1 << i) == 0
-                if current_state[i] is not state:
+                if current_state[i] is not new_state[i]:
                     changed = True
-                current_state[i] = state
-                print("{0}".format(state), end=' ')
+                current_state[i] = new_state[i]
 
-            print("")
             if changed:
-                #sending_thread = threading.Thread(target=send_status(), kwargs={"data": current_state})
-                #sending_thread.start()
-                send_status(current_state)
+                sending_thread = threading.Thread(target=send_status, args=(current_state, ))
+                sending_thread.start()
                 print("STATE CHANGED SENDING...")
-
         except Exception as err:
             print("Status Handler Error {0}".format(err))
 

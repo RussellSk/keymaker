@@ -1,5 +1,7 @@
 import socket
 import time
+import queue
+import threading
 
 
 class KeymasterLan:
@@ -11,39 +13,61 @@ class KeymasterLan:
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(1)
         self.client.connect((self.address, self.port))
+        self.current_state = {}
+        self.command_queue = queue.Queue()
+        lan_worker = threading.Thread(target=self.lan_worker)
+        lan_worker.start()
 
     def __del__(self):
         if self.client is not None:
             self.client.close()
+
+    def lan_worker(self):
+        while True:
+            try:
+                if not self.command_queue.empty():
+                    item = self.command_queue.get()
+                    if item.get('command') == 'write':
+                        self.client.send(item.get('data'))
+                    if item.get('command') == 'read':
+                        self.update_status(self.client.recv(9))
+                    self.command_queue.task_done()
+                    time.sleep(.3)
+            except Exception as err:
+                print('Serial worker error: {0}'.format(err))
+
+    def update_status(self, state_bytes):
+        for i in range(0, 16):
+            self.current_state[i] = not ((state_bytes[4] << 8) + state_bytes[3]) & (1 << i) == 0
 
     def __write(self, data):
         if self.client is None:
             print("Socket is not established")
             return
 
-        tmpSum = 0x0
+        tmp_sum = 0x0
         for byte in data:
-            tmpSum += int(byte)
-        sum = tmpSum % 256
+            tmp_sum += int(byte)
+        command_sum = tmp_sum % 256
 
-        data.append(sum)
-
-        self.client.send(bytes(data))
+        data.append(command_sum)
+        self.command_queue.put({'command': 'write', 'data': bytes(data)})
 
     def __read(self, read_bytes):
         if self.client is None:
             print("Socket is not established")
             return
+        self.command_queue.put({'command': 'read', 'data': []})
 
-        return self.client.recv(read_bytes)
-
-    def openLocker(self, number):
+    def open_locker(self, number):
         self.__write([0x02, number, 0x31, 0x03])
 
-    def getLockerStatus(self, number):
+    def request_locker_status(self, number):
         self.__write([0x02, number, 0x30, 0x03])
-        time.sleep(.05)
-        return self.__read(9)
+        self.__read(9)
+
+    def get_current_state(self):
+        return self.current_state
 
 
 if __name__ == '__main__':
