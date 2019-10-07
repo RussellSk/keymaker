@@ -22,7 +22,7 @@ POSTOMAT_NUMBER = cfg.get('MAIN', 'postomat_number')
 
 
 if KEYMASTER_DRIVER == "LAN":
-    ser = KeymasterLan.KeymasterLan(cfg.get('DEVICE_LAN', 'ip'), cfg.get('DEVICE_LAN', 'port'))
+    ser = KeymasterLan.KeymasterLan(cfg.get('DEVICE_LAN', 'ip'), cfg.getint('DEVICE_LAN', 'port'))
 elif KEYMASTER_DRIVER == "SERIAL":
     ser = Keymaster.Keymaster(
         cfg.get('DEVICE_SERIAL', 'port'),
