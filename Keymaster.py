@@ -3,6 +3,7 @@ import datetime
 import time
 import queue
 import threading
+import os
 
 
 class Keymaster:
@@ -12,8 +13,12 @@ class Keymaster:
 
     def __init__(self, _port="COM3", _baudrate=19200, _timeout=1, _stopbits=1):
         try:
+            self.port = _port
+            self.baudrate = _baudrate
+            self.timeout = _timeout
+            self.stopbit = _stopbits
+            self._serial_connect()
             self.command_queue = queue.Queue()
-            self.ser = serial.Serial(port=_port, baudrate=_baudrate, timeout=_timeout, stopbits=_stopbits)
             self.current_state = {}
             command_thread = threading.Thread(target=self.serial_worker)
             command_thread.start()
@@ -24,6 +29,22 @@ class Keymaster:
                     self.ser.close()
 
     def __del__(self):
+        self._serial_disconnect()
+
+    def _serial_connect(self):
+        for i in range(5):
+            try:
+                self._serial_disconnect()
+                self.ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout, stopbits=self.stopbit)
+                break
+            except serial.SerialException as err:
+                print("Connection error: {0}".format(err))
+            except Exception as err:
+                print("Connection error: {0}".format(err))
+            if i == 4:
+                os._exit(1)
+
+    def _serial_disconnect(self):
         if self.ser is not None:
             if self.ser.is_open:
                 self.ser.close()
@@ -49,8 +70,7 @@ class Keymaster:
 
     def __write(self, data):
         if self.ser is None:
-            self.__error("Serial connection is not established")
-            return
+            self._serial_connect()
 
         tmp_sum = 0x0
         for byte in data:
@@ -62,8 +82,8 @@ class Keymaster:
 
     def __read(self, read_bytes):
         if self.ser is None:
-            self.__error("Serial connection is not established")
-            return
+            self._serial_connect()
+
         self.command_queue.put({'command': 'read', 'data': []})
 
     def open_locker(self, number):

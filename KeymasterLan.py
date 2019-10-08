@@ -2,6 +2,7 @@ import socket
 import time
 import queue
 import threading
+import os
 
 
 class KeymasterLan:
@@ -10,15 +11,29 @@ class KeymasterLan:
     def __init__(self, addr, port):
         self.address = addr
         self.port = port
-        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.settimeout(1)
-        self.client.connect((self.address, self.port))
+        self._connect()
         self.current_state = {}
         self.command_queue = queue.Queue()
         lan_worker = threading.Thread(target=self.lan_worker)
         lan_worker.start()
 
     def __del__(self):
+        self._disconnect()
+
+    def _connect(self):
+        for i in range(5):
+            try:
+                self._disconnect()
+                self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.client.settimeout(1)
+                self.client.connect((self.address, self.port))
+                break
+            except Exception as err:
+                print("Connection error: {0}".format(err))
+            if i == 4:
+                os._exit(1)
+
+    def _disconnect(self):
         if self.client is not None:
             self.client.close()
 
@@ -42,8 +57,7 @@ class KeymasterLan:
 
     def __write(self, data):
         if self.client is None:
-            print("Socket is not established")
-            return
+            self._connect()
 
         tmp_sum = 0x0
         for byte in data:
@@ -55,8 +69,8 @@ class KeymasterLan:
 
     def __read(self, read_bytes):
         if self.client is None:
-            print("Socket is not established")
-            return
+            self._connect()
+
         self.command_queue.put({'command': 'read', 'data': []})
 
     def open_locker(self, number):
