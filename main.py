@@ -70,15 +70,23 @@ def status_handler():
             time.sleep(1)
             new_state = ser.get_current_state()
             changed = False
+            is_all_closed = True
+
             for i in range(0, 16):
                 if current_state[i] is not new_state[i]:
                     changed = True
+                if new_state[i] is False:
+                    is_all_closed = False
                 current_state[i] = new_state[i]
 
             if changed:
                 sending_thread = threading.Thread(target=send_status, args=(current_state, ))
                 sending_thread.start()
                 print("STATE CHANGED SENDING...")
+
+            if is_all_closed:
+                ser.disconnect()
+
         except Exception as err:
             print("Status Handler Error {0}".format(err))
 

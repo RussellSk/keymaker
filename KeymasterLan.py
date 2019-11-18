@@ -11,19 +11,19 @@ class KeymasterLan:
     def __init__(self, addr, port):
         self.address = addr
         self.port = port
-        self._connect()
+        self.connect()
         self.current_state = {}
         self.command_queue = queue.Queue()
         lan_worker = threading.Thread(target=self.lan_worker)
         lan_worker.start()
 
     def __del__(self):
-        self._disconnect()
+        self.disconnect()
 
-    def _connect(self):
+    def connect(self):
         for i in range(5):
             try:
-                self._disconnect()
+                self.disconnect()
                 self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.client.settimeout(1)
                 self.client.connect((self.address, self.port))
@@ -33,9 +33,10 @@ class KeymasterLan:
             if i == 4:
                 os._exit(1)
 
-    def _disconnect(self):
+    def disconnect(self):
         if self.client is not None:
             self.client.close()
+            self.client = None
 
     def lan_worker(self):
         while True:
@@ -57,7 +58,7 @@ class KeymasterLan:
 
     def __write(self, data):
         if self.client is None:
-            self._connect()
+            self.connect()
 
         tmp_sum = 0x0
         for byte in data:
@@ -69,7 +70,7 @@ class KeymasterLan:
 
     def __read(self, read_bytes):
         if self.client is None:
-            self._connect()
+            self.connect()
 
         self.command_queue.put({'command': 'read', 'data': []})
 
